@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://resq_user:resq_password@postgres:5432/resq_db
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend:/app
+      - ./engine:/app/engine
+      - ./simulator:/app/simulator
+      - ./ledger:/app/ledger
+
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: resq_user
+      POSTGRES_PASSWORD: resq_password
+      POSTGRES_DB: resq_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - resq_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  resq_postgres_data:
